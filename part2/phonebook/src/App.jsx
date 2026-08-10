@@ -1,17 +1,26 @@
-import { useState } from 'react'
-
-const List = ({personName, personNumber}) => <li> {personName}: {personNumber}</li>
+import { useState, useEffect} from 'react'
+import axios from "axios"
+import Filter from './components/Filter'
+import PersonForm from './components/PersonForm'
+import Persons from './components/Persons'
 
 const App = () => {
-  const [persons, setPersons] = useState([
-    { key: 'arto-hellas',name: 'Arto Hellas', number: '9999999999'},
-    { key: 'abdullah-aakukara',name: 'Abdullah Aakukara', number: '8155895245'},
-    { key: 'jasmine',name: 'Jasmine', number: '9998280391'}
-  ]) 
+  const [persons, setPersons] = useState([]) 
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [newSearch, setSearchBar] = useState('')
 
+  useEffect(()=> {
+    console.log("effect")
+    axios
+    .get('http://localhost:3001/persons')
+    .then(response => {
+      const fetchedPersons = response.data
+      setPersons(fetchedPersons) 
+    })
+  }, [])
+
+  console.log("promise fulfilled");
   const visiblePersons = newSearch.trim() === ''
     ? persons
     : persons.filter(person =>
@@ -63,33 +72,16 @@ const App = () => {
     setSearchBar(event.target.value)
   }
 
-  // Search button click handler
-  const handleSearchClick = () => {
-    if (newSearch.trim() === '') {
-      window.alert('INVALID SEARCH!')
-    }
-  }
+
 
   return (
     <div>
       <h2>Phonebook</h2>
       <p>Search Bar 🔎</p>
-      <input value={newSearch} onChange={handleSearchInput}/> <button onClick={handleSearchClick}> Search 🔎</button>
-      <form onSubmit={handleSubmit}>
-        <div>
-          name: <input value={newName} onChange={handleNewNameInput}/>
-        </div>
-        <div>
-          number: <input value={newNumber} onChange={handleNewNumberInput}/>
-        </div>
-        <div>
-          <button type="submit">add</button>
-        </div>
-      </form>
+      <Filter searchValue={newSearch} onChange={handleSearchInput}/>
+      <PersonForm name={newName} number={newNumber} onSubmit={handleSubmit} onNameChange={handleNewNameInput} onNumberChange={handleNewNumberInput} />
       <h2>Numbers</h2>
-      <ul>
-        {visiblePersons.map(person => <List key={person.key} personName={person.name} personNumber={person.number}/>)}
-      </ul>
+      <Persons allPersons={visiblePersons}/>
     </div>
   )
 }
